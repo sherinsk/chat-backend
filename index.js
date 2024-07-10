@@ -11,10 +11,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://chat-frontend-pied.vercel.app"], // Your Vite development server URL
+    origin: ["https://chat-frontend-pied.vercel.app", "http://localhost:5173"], // Added localhost
     methods: ["GET", "POST"]
   }
 });
+
 
 const JWT_SECRET = 'your_jwt_secret'; // Replace with your secret
 
