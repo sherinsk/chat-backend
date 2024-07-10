@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://chat-frontend-pied.vercel.app",// Update this to match your frontend URL
+    origin: ["http://localhost:5173"], // Your Vite development server URL
     methods: ["GET", "POST"]
   }
 });
@@ -20,6 +20,8 @@ const JWT_SECRET = 'your_jwt_secret'; // Replace with your secret
 
 app.use(cors());
 app.use(express.json());
+
+const userSocketMap = new Map(); // Global object to store user ID to socket ID mappings
 
 // Register user
 app.post('/register', async (req, res) => {
@@ -42,7 +44,7 @@ app.post('/login', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user && await bcrypt.compare(password, user.password)) {
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token });
   } else {
     res.status(401).send('Invalid credentials');
@@ -74,56 +76,9 @@ app.get('/users/:id', authenticateToken, async (req, res) => {
   res.json(user);
 });
 
-io.on('connection', (socket) => {
-  console.log('a user connected');
-
-  socket.on('joinRoom', ({ token, receiverId }) => {
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-      if (err) {
-        console.error('Invalid token');
-        return;
-      }
-      const senderId = decoded.userId;
-      const room = [senderId, receiverId].sort().join('-');
-      console.log(room)
-      socket.join(room);
-    });
-  });
-
-  socket.on('message', async ({ token, receiverId, content }) => {
-    jwt.verify(token, JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        console.error('Invalid token');
-        return;
-      }
-      const senderId = decoded.userId;
-      try {
-        console.log("hi")
-        const message = await prisma.message.create({
-          data: {
-            content,
-            senderId: parseInt(senderId),
-            receiverId: parseInt(receiverId),
-          },
-        });
-
-        const room = [senderId, receiverId].sort().join('-');
-        io.to(room).emit('message', message);
-      } catch (err) {
-        console.error('Error saving message:', err);
-      }
-    });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
-  });
-});
-
 // Get messages between two users
 app.get('/messages/:senderId/:receiverId', authenticateToken, async (req, res) => {
-  const {receiverId } = req.params;
-  const senderId=req.userId
+  const { senderId, receiverId } = req.params;
 
   const messages = await prisma.message.findMany({
     where: {
@@ -138,6 +93,136 @@ app.get('/messages/:senderId/:receiverId', authenticateToken, async (req, res) =
   });
 
   res.json(messages);
+});
+
+// Get notifications for the user
+app.get('/notifications', authenticateToken, async (req, res) => {
+  const notifications = await prisma.notification.findMany({
+    where: {
+      userId: req.userId,
+      seen: false,
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  res.json(notifications);
+});
+
+// Mark notifications as seen
+app.post('/notifications/mark-seen', authenticateToken, async (req, res) => {
+  const { notificationIds } = req.body;
+  await prisma.notification.updateMany({
+    where: {
+      id: { in: notificationIds },
+      userId: req.userId,
+    },
+    data: {
+      seen: true,
+    },
+  });
+
+  res.sendStatus(200);
+});
+
+const parseJwt = (token) => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (e) {
+    console.error('Invalid token', e);
+    return null;
+  }
+};
+
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  // Store the user's socket ID when they connect
+  socket.on('register', (userId) => {
+    userSocketMap.set(userId, socket.id);
+    console.log(`User ${userId} connected with socket ID ${socket.id}`);
+  });
+
+  socket.on('message', async ({ token, receiverId, content }) => {
+    try {
+      const decoded = parseJwt(token);
+      if (!decoded) {
+        return;
+      }
+      const senderId = decoded.userId;
+
+      const message = await prisma.message.create({
+        data: {
+          content,
+          senderId,
+          receiverId,
+        },
+      });
+
+      // Emit message to the receiver
+      const room = [senderId, receiverId].sort().join('-');
+      io.to(room).emit('message', message);
+
+      // Check if the receiver is in the same room
+      const clientsInRoom = await io.in(room).allSockets();
+      const isReceiverInRoom = Array.from(clientsInRoom).includes(userSocketMap.get(receiverId));
+
+      if (!isReceiverInRoom) {
+        // Create and emit notification to the receiver
+        const sender = await prisma.user.findUnique({ where: { id: senderId } });
+        const notification = await prisma.notification.create({
+          data: {
+            userId: receiverId,
+            messageId: message.id,
+            content: `New message from ${sender.username}`,
+          },
+        });
+        console.log(notification);
+
+        // Retrieve the receiver's socket ID
+        const receiverSocketId = userSocketMap.get(receiverId);
+
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit('notification', notification);
+        } else {
+          console.log(`No socket ID found for user ${receiverId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+
+  socket.on('joinRoom', ({ token, receiverId }) => {
+    const decoded = parseJwt(token);
+    if (!decoded) {
+      return;
+    }
+    const userId = decoded.userId;
+
+    // Leave the previous room
+    const previousRoom = socket.rooms.size > 1 ? Array.from(socket.rooms)[1] : null;
+    if (previousRoom) {
+      socket.leave(previousRoom);
+      console.log(`User ${userId} left room ${previousRoom}`);
+    }
+
+    // Join the new room
+    const newRoom = [userId, receiverId].sort().join('-');
+    socket.join(newRoom);
+    console.log(`User ${userId} joined room ${newRoom}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+    // Remove the user from the mapping if needed
+    userSocketMap.forEach((value, key) => {
+      if (value === socket.id) {
+        userSocketMap.delete(key);
+      }
+    });
+  });
 });
 
 server.listen(3000, () => {
