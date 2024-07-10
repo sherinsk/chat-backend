@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"], // Your Vite development server URL
+    origin: ["https://chat-frontend-pied.vercel.app"], // Your Vite development server URL
     methods: ["GET", "POST"]
   }
 });
