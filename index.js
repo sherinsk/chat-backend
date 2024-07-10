@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
 
+
 const prisma = new PrismaClient();
 const app = express();
 const server = http.createServer(app);
