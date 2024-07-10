@@ -172,6 +172,7 @@ io.on('connection', (socket) => {
       if (!isReceiverInRoom) {
         // Create and emit notification to the receiver
         const sender = await prisma.user.findUnique({ where: { id: senderId } });
+        console.log(sender)
         const notification = await prisma.notification.create({
           data: {
             userId: receiverId,
