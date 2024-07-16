@@ -199,6 +199,7 @@ io.on('connection', (socket) => {
 
   socket.on('joinRoom', ({ token, receiverId }) => {
     const decoded = parseJwt(token);
+    console.log(decoded)
     if (!decoded) {
       return;
     }
