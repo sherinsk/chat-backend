@@ -18,7 +18,7 @@ const io = new Server(server, {
 });
 
 
-const JWT_SECRET = 'your_jwt_secret'; // Replace with your secret
+const JWT_SECRET = 'sherin'; // Replace with your secret
 
 app.use(cors());
 app.use(express.json());
@@ -141,10 +141,10 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   // Store the user's socket ID when they connect
-  socket.on('register', (userId) => {
-    userSocketMap.set(userId, socket.id);
-    console.log(`User ${userId} connected with socket ID ${socket.id}`);
-  });
+  // socket.on('register', (userId) => {
+  //   userSocketMap.set(userId, socket.id);
+  //   console.log(`User ${userId} connected with socket ID ${socket.id}`);
+  // });
 
   socket.on('message', async ({ token, receiverId, content }) => {
     try {
