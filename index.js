@@ -66,7 +66,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Get all users
-app.get('/users', authenticateToken, async (req, res) => {
+app.get('/users', async (req, res) => {
   const users = await prisma.user.findMany();
   res.json(users);
 });
