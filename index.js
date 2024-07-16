@@ -198,6 +198,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('joinRoom', ({ token, receiverId }) => {
+    try
+    {
+    console.log(token)
+    console.log(receiverId)
     const decoded = parseJwt(token);
     console.log(decoded)
     if (!decoded) {
@@ -216,6 +220,12 @@ io.on('connection', (socket) => {
     const newRoom = [userId, receiverId].sort().join('-');
     socket.join(newRoom);
     console.log(`User ${userId} joined room ${newRoom}`);
+
+    }
+    catch(err)
+    {
+      console.log(err)
+    }
   });
 
   socket.on('disconnect', () => {
