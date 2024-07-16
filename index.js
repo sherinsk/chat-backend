@@ -23,7 +23,7 @@ const JWT_SECRET = 'your_jwt_secret'; // Replace with your secret
 app.use(cors());
 app.use(express.json());
 
-const userSocketMap = new Map(); // Global object to store user ID to socket ID mappings
+2  // Global object to store user ID to socket ID mappings
 
 // Register user
 app.post('/register', async (req, res) => {
@@ -72,7 +72,7 @@ app.get('/users', authenticateToken, async (req, res) => {
 });
 
 // Get user by id
-app.get('/users/:id', authenticateToken, async (req, res) => {
+app.get('/users/:id', async (req, res) => {
   const { id } = req.params;
   const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
   res.json(user);
