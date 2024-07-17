@@ -80,7 +80,8 @@ app.get('/users/:id', async (req, res) => {
 
 // Get messages between two users
 app.get('/messages/:senderId/:receiverId', async (req, res) => {
-  const { senderId, receiverId } = req.params;
+  const { receiverId } = req.params;
+  const {senderId}=(parseJwt(token)).userId
 
   const messages = await prisma.message.findMany({
     where: {
