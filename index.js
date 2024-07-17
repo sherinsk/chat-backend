@@ -222,16 +222,31 @@ io.on('connection', (socket) => {
     }
   });
 
-  // socket.on('leaveRoom',({token,receiverId}))=>{
-  //   try
-  //   {
+  socket.on('leaveRoom', ({ token, receiverId }) => {
+    try
+    {
+    console.log(token)
+    console.log(receiverId)
+    const decoded = parseJwt(token);
+    console.log(decoded)
+    if (!decoded) {
+      return;
+    }
+    const userId = decoded.userId;
 
-  //   }
-  //   catch(err)
-  //   {
+    // Leave the previous room
+    const previousRoom = socket.rooms.size > 1 ? Array.from(socket.rooms)[1] : null;
+    if (previousRoom) {
+      socket.leave(previousRoom);
+      console.log(`User ${userId} left room ${previousRoom}`);
+    }
 
-  //   }
-  // }
+    }
+    catch(err)
+    {
+      console.log(err)
+    }
+  });
 
   socket.on('joinRoom', ({ token, receiverId }) => {
     try
