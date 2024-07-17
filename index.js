@@ -79,7 +79,7 @@ app.get('/users/:id', async (req, res) => {
 });
 
 // Get messages between two users
-app.get('/messages/:senderId/:receiverId', authenticateToken, async (req, res) => {
+app.get('/messages/:senderId/:receiverId', async (req, res) => {
   const { senderId, receiverId } = req.params;
 
   const messages = await prisma.message.findMany({
