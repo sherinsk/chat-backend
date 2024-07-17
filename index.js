@@ -107,7 +107,7 @@ app.get('/messages/:receiverId', async (req, res) => {
     },
   });
 
-  res.status(200).json({messages});
+  res.status(200).json({senderId,messages});
 });
 
 app.get('/messages/:senderId/:receiverId', async (req, res) => {
