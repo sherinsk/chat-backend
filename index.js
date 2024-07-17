@@ -23,6 +23,15 @@ const JWT_SECRET = 'sherin'; // Replace with your secret
 app.use(cors());
 app.use(express.json());
 
+const parseJwt = (token) => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (e) {
+    console.error('Invalid token', e);
+    return null;
+  }
+};
+
 2  // Global object to store user ID to socket ID mappings
 
 // Register user
@@ -81,6 +90,9 @@ app.get('/users/:id', async (req, res) => {
 // Get messages between two users
 app.get('/messages/:receiverId', async (req, res) => {
   const { receiverId } = req.params;
+  var token=req.headers['authorization']
+  token=token.split(' ')[1]
+  console.log(token)
   const senderId=(parseJwt(token)).userId
 
   const messages = await prisma.message.findMany({
@@ -95,7 +107,7 @@ app.get('/messages/:receiverId', async (req, res) => {
     },
   });
 
-  res.status(200).json(messages);
+  res.status(200).json({messages});
 });
 
 app.get('/messages/:senderId/:receiverId', async (req, res) => {
@@ -148,14 +160,7 @@ app.post('/notifications/mark-seen', authenticateToken, async (req, res) => {
   res.sendStatus(200);
 });
 
-const parseJwt = (token) => {
-  try {
-    return jwt.verify(token, JWT_SECRET);
-  } catch (e) {
-    console.error('Invalid token', e);
-    return null;
-  }
-};
+
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -217,16 +222,16 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('leaveRoom',({token,receiverId}))=>{
-    try
-    {
+  // socket.on('leaveRoom',({token,receiverId}))=>{
+  //   try
+  //   {
 
-    }
-    catch(err)
-    {
+  //   }
+  //   catch(err)
+  //   {
 
-    }
-  }
+  //   }
+  // }
 
   socket.on('joinRoom', ({ token, receiverId }) => {
     try
