@@ -95,7 +95,26 @@ app.get('/messages/:receiverId', async (req, res) => {
     },
   });
 
-  res.json(messages);
+  res.status(200).json(messages);
+});
+
+app.get('/messages/:senderId/:receiverId', async (req, res) => {
+  const { receiverId,senderId } = req.params;
+  console.log(senderId)
+
+  const messages = await prisma.message.findMany({
+    where: {
+      OR: [
+        { senderId: parseInt(senderId), receiverId: parseInt(receiverId) },
+        { senderId: parseInt(receiverId), receiverId: parseInt(senderId) },
+      ],
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  });
+
+  res.status(200).json(messages);
 });
 
 // Get notifications for the user
@@ -197,6 +216,17 @@ io.on('connection', (socket) => {
       console.error('Error sending message:', error);
     }
   });
+
+  socket.on('leaveRoom',({token,receiverId}))=>{
+    try
+    {
+
+    }
+    catch(err)
+    {
+
+    }
+  }
 
   socket.on('joinRoom', ({ token, receiverId }) => {
     try
