@@ -79,7 +79,7 @@ app.get('/users/:id', async (req, res) => {
 });
 
 // Get messages between two users
-app.get('/messages/:senderId/:receiverId', async (req, res) => {
+app.get('/messages/:receiverId', async (req, res) => {
   const { receiverId } = req.params;
   const senderId=(parseJwt(token)).userId
 
