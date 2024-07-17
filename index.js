@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
+const nodemailer = require("nodemailer");
 
 
 const prisma = new PrismaClient();
@@ -16,6 +17,22 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "sherinsk.backenddev@gmail.com",
+    pass: "xjog ytwr nbwy fexz",
+  },
+});
+
+function generateOTP() {
+  return Math.floor(1000 + Math.random() * 9000); 
+}
+
+var emailwithOTP =[]
 
 
 const JWT_SECRET = 'sherin'; // Replace with your secret
@@ -34,23 +51,87 @@ const parseJwt = (token) => {
 
 2  // Global object to store user ID to socket ID mappings
 
+//send otp
+
+app.post('/sendotp',async (req, res)=>{
+  const { email } = req.body;
+   let generatedOTP={}
+   generatedOTP.OTP = generateOTP()
+   generatedOTP.email=email;
+  if (!email) {
+    return res.status(400).json({ error: "Email address is required." });
+  }
+
+  const existingUser=await prisma.user.findFirst({where:{email}})
+    if(existingUser)
+    {
+      return res.status(200).json({message:"User already exists"})
+    }
+  console.log("Sending OTP to:", email);
+  
+  try {
+    const info = await transporter.sendMail({
+      from: "sherinsk.backenddev@gmail.com",
+      to: email,
+      subject: "Messenger",
+      text: `Your OTP is: ${generatedOTP.OTP}`,
+      html: `<p>Your OTP is: <strong>${generatedOTP.OTP}</strong></p>`,
+    });
+
+    emailwithOTP.push(generatedOTP)
+
+    console.log("OTP sent: %s to %s", generatedOTP, email);
+    res.status(200).json({ message: "OTP sent successfully" });
+
+    setTimeout(() => {
+      const index = emailwithOTP.findIndex(item => item.email === email);
+      if (index !== -1) {
+          emailwithOTP.splice(index, 1);
+          console.log(`OTP removed for email ${email} after 30 seconds.`);
+      }
+  }, 30000);
+  
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    res.status(500).json({ error: "Failed to send OTP" });
+  }
+})
+
 // Register user
 app.post('/register', async (req, res) => {
   const { email, password, username } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
   try {
-    const existingUser=await prisma.user.findFirst({where:{email}})
-    if(existingUser)
-    {
-      return res.status(200).json({message:"User already exists"})
-    }
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, username },
+      data: { email, password: hashedPassword, username,isEmailverified:true },
     });
-    res.json(user);
+    res.status(200).json({message:"User registered successfully"});
   } catch (error) {
     console.log(error);
     res.status(400).send('User already exists');
+  }
+});
+
+app.post('/appregister', async (req, res) => {
+  const { email, password, username,otp } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const matchingEntry = emailwithOTP.find(entry => entry.email === email && entry.OTP == otp);
+
+      if (!matchingEntry) {
+          return res.status(400).json({ error: "Invalid OTP or email" });
+      }
+
+      // If found, remove the entry from the array
+      const index = emailwithOTP.indexOf(matchingEntry);
+      emailwithOTP.splice(index, 1);
+    const user = await prisma.user.create({
+      data: { email, password: hashedPassword, username,isEmailverified:true },
+    });
+    res.status(200).json({message:"User registered successfully"});
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({error:"Internal server Error"});
   }
 });
 
@@ -61,9 +142,9 @@ app.post('/login', async (req, res) => {
 
   if (user && await bcrypt.compare(password, user.password)) {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
-    res.json({ token });
+    res.status(200).json({ token });
   } else {
-    res.status(401).send('Invalid credentials');
+    res.status(200).json({message:'Invalid credentials'});
   }
 });
 
