@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
 const nodemailer = require("nodemailer");
+const path = require('path');
+const ejs = require('ejs');
 
 
 const prisma = new PrismaClient();
@@ -54,7 +56,7 @@ const parseJwt = (token) => {
 //send otp
 
 app.post('/sendotp',async (req, res)=>{
-  const { email } = req.body;
+  const { email,username } = req.body;
    let generatedOTP={}
    generatedOTP.OTP = generateOTP()
    generatedOTP.email=email;
@@ -70,12 +72,13 @@ app.post('/sendotp',async (req, res)=>{
   console.log("Sending OTP to:", email);
   
   try {
+    const html = await ejs.renderFile(path.join(__dirname, 'views', 'otpEmail.ejs'), { otp: generatedOTP.OTP, username });
+
     const info = await transporter.sendMail({
       from: "sherinsk.backenddev@gmail.com",
       to: email,
       subject: "Messenger",
-      text: `Your OTP is: ${generatedOTP.OTP}`,
-      html: `<p>Your OTP is: <strong>${generatedOTP.OTP}</strong></p>`,
+      html: html,
     });
 
     emailwithOTP.push(generatedOTP)
