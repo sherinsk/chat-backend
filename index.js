@@ -320,7 +320,7 @@ io.on('connection', (socket) => {
       const senderId = decoded.userId;
 
      const status="typing..."
-     const obj={status,senderId}
+     const obj={status,senderId,receiverId}
      console.log(status)
 
       // Emit message to the receiver
