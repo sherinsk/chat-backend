@@ -311,6 +311,51 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('typing', async ({ token, receiverId }) => {
+    try {
+      const decoded = parseJwt(token);
+      if (!decoded) {
+        return;
+      }
+      const senderId = decoded.userId;
+
+     const status="typing"
+
+      // Emit message to the receiver
+      const room = [senderId, receiverId].sort().join('-');
+      io.to(room).emit('typing', status);
+
+      // Check if the receiver is in the same room
+      // const clientsInRoom = await io.in(room).allSockets();
+      // const isReceiverInRoom = Array.from(clientsInRoom).includes(userSocketMap.get(receiverId));
+
+      // if (!isReceiverInRoom) {
+      //   // Create and emit notification to the receiver
+      //   const sender = await prisma.user.findUnique({ where: { id: senderId } });
+      //   console.log(sender)
+      //   const notification = await prisma.notification.create({
+      //     data: {
+      //       userId: receiverId,
+      //       messageId: message.id,
+      //       content: `New message from ${sender.username}`,
+      //     },
+      //   });
+      //   console.log(notification);
+
+      //   // Retrieve the receiver's socket ID
+      //   const receiverSocketId = userSocketMap.get(receiverId);
+
+      //   if (receiverSocketId) {
+      //     io.to(receiverSocketId).emit('notification', notification);
+      //   } else {
+      //     console.log(`No socket ID found for user ${receiverId}`);
+        // }
+      // }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+
   socket.on('leaveRoom', ({ token, receiverId }) => {
     try
     {
