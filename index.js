@@ -320,6 +320,7 @@ io.on('connection', (socket) => {
       const senderId = decoded.userId;
 
      const status="typing"
+     console.log(status)
 
       // Emit message to the receiver
       const room = [senderId, receiverId].sort().join('-');
