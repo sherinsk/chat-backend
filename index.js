@@ -319,12 +319,13 @@ io.on('connection', (socket) => {
       }
       const senderId = decoded.userId;
 
-     const status="typing"
+     const status="typing..."
+     const obj={status,senderId}
      console.log(status)
 
       // Emit message to the receiver
       const room = [senderId, receiverId].sort().join('-');
-      io.to(room).emit('typing', status);
+      io.to(room).emit('typing', obj);
 
       // Check if the receiver is in the same room
       // const clientsInRoom = await io.in(room).allSockets();
