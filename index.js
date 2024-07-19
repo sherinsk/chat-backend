@@ -31,6 +31,13 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+function isEmail(email) {
+  var emailFormat = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  if (email !== '' && email.match(emailFormat)) { return true; }
+  
+  return false;
+}
+
 function generateOTP() {
   return Math.floor(1000 + Math.random() * 9000); 
 }
@@ -63,6 +70,12 @@ app.post('/sendotp',async (req, res)=>{
    generatedOTP.email=email;
   if (!email) {
     return res.status(400).json({ error: "Email address is required." });
+  }
+
+  const emailValid=isEmail(email)
+  if(!emailValid)
+  {
+    return res.status(200).json({status:false,message:"Invalid email Format"})
   }
 
   const existingUser=await prisma.user.findFirst({where:{email}})
