@@ -91,7 +91,7 @@ app.post('/sendotp',async (req, res)=>{
     const info = await transporter.sendMail({
       from: "sherinsk.backenddev@gmail.com",
       to: email,
-      subject: "Messenger",
+      subject: "ChatWave-Registration OTP!!!",
       html: html,
     });
 
