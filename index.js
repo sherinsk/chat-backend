@@ -136,7 +136,7 @@ app.post('/appregister', async (req, res) => {
     const matchingEntry = emailwithOTP.find(entry => entry.email === email && entry.OTP == otp);
 
       if (!matchingEntry) {
-          return res.status(400).json({ error: "Invalid OTP or email" });
+          return res.status(200).json({ status:false, message: "Invalid OTP" });
       }
 
       // If found, remove the entry from the array
@@ -145,7 +145,7 @@ app.post('/appregister', async (req, res) => {
     const user = await prisma.user.create({
       data: { email, password: hashedPassword, username,isEmailverified:true },
     });
-    res.status(200).json({message:"User registered successfully"});
+    res.status(200).json({status:true,message:"User registered successfully"});
   } catch (error) {
     console.log(error);
     res.status(500).json({error:"Internal server Error"});
