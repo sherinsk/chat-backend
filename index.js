@@ -68,7 +68,7 @@ app.post('/sendotp',async (req, res)=>{
   const existingUser=await prisma.user.findFirst({where:{email}})
     if(existingUser)
     {
-      return res.status(200).json({message:"User already exists"})
+      return res.status(200).json({status:false,message:"User already exists"})
     }
   console.log("Sending OTP to:", email);
   
@@ -85,13 +85,13 @@ app.post('/sendotp',async (req, res)=>{
     emailwithOTP.push(generatedOTP)
 
     console.log("OTP sent: %s to %s", generatedOTP, email);
-    res.status(200).json({ message: "OTP sent successfully" });
+    res.status(200).json({ status:true,message: "OTP sent successfully" });
 
     setTimeout(() => {
       const index = emailwithOTP.findIndex(item => item.email === email);
       if (index !== -1) {
           emailwithOTP.splice(index, 1);
-          console.log(`OTP removed for email ${email} after 30 seconds.`);
+          console.log(`OTP removed for email ${email} after 60 seconds.`);
       }
   }, 60000);
   
