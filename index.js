@@ -111,7 +111,7 @@ app.post('/register', async (req, res) => {
     res.status(200).json({message:"User registered successfully"});
   } catch (error) {
     console.log(error);
-    res.status(400).send('User already exists');
+    res.status(400).json('User already exists');
   }
 });
 
