@@ -8,6 +8,7 @@ const { PrismaClient } = require('@prisma/client');
 const nodemailer = require("nodemailer");
 const path = require('path');
 const ejs = require('ejs');
+const { error } = require('console');
 
 
 const prisma = new PrismaClient();
@@ -92,7 +93,7 @@ app.post('/sendotp',async (req, res)=>{
           emailwithOTP.splice(index, 1);
           console.log(`OTP removed for email ${email} after 30 seconds.`);
       }
-  }, 30000);
+  }, 60000);
   
   } catch (error) {
     console.error("Error sending OTP:", error);
@@ -141,14 +142,21 @@ app.post('/appregister', async (req, res) => {
 // Login user
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email } });
-
-  if (user && await bcrypt.compare(password, user.password)) {
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
-    res.status(200).json({ token,userId:user.id });
-  } else {
-    res.status(200).json({message:'Invalid credentials'});
+  try
+  {
+    if (user && await bcrypt.compare(password, user.password)) {
+      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
+      res.status(200).json({ token,userId:user.id });
+    } else {
+      res.status(200).json({message:'Invalid credentials'});
+    }
   }
+  catch(err)
+  {
+    console.log(err)
+    res.status(500).json({error:"Internal Server Error"})
+  }
+  const user = await prisma.user.findUnique({ where: { email } });
 });
 
 // Middleware to authenticate token
