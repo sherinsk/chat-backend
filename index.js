@@ -157,6 +157,7 @@ app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try
   {
+    const user = await prisma.user.findUnique({ where: { email } });
     if (user && await bcrypt.compare(password, user.password)) {
       const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '24h' });
       res.status(200).json({status:true, token,userId:user.id });
@@ -169,7 +170,6 @@ app.post('/login', async (req, res) => {
     console.log(err)
     res.status(500).json({error:"Internal Server Error"})
   }
-  const user = await prisma.user.findUnique({ where: { email } });
 });
 
 // Middleware to authenticate token
