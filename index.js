@@ -98,7 +98,7 @@ app.post('/sendotp',async (req, res)=>{
     emailwithOTP.push(generatedOTP)
 
     console.log("OTP sent: %s to %s", generatedOTP, email);
-    res.status(200).json({ status:true,message: "OTP sent successfully" });
+    res.status(200).json({ status:true,message: `OTP sent to ${email}` });
 
     setTimeout(() => {
       const index = emailwithOTP.findIndex(item => item.email === email);
