@@ -346,6 +346,7 @@ io.on('connection', (socket) => {
 
         // Retrieve the receiver's socket ID
         var receiverSocketId = userSocketMap.get(senderId);
+        console.log(receiverSocketId)
 
         if (receiverSocketId) {
           console.log(userSocketMap)
