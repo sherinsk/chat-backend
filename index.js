@@ -352,7 +352,7 @@ io.on('connection', (socket) => {
 
         if (receiverSocketId) {
           console.log(userSocketMap)
-          io.to(receiverSocketId).emit('onlineusers', userSocketMap);
+          io.to(receiverSocketId).emit('onlineusers', "Hi");
         } else {
           console.log(`No socket ID found for user ${receiverId}`);
         }
