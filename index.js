@@ -279,8 +279,8 @@ io.on('connection', (socket) => {
   // Store the user's socket ID when they connect
   socket.on('register', (token) => {
     console.log(token)
-    const userId=(parseJwt(token))
-    console.log(userId)
+    const decoded=parseJwt(token)
+    console.log(decoded)
     userSocketMap.set(userId, socket.id);
     console.log(`User ${userId} connected with socket ID ${socket.id}`);
   });
