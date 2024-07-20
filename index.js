@@ -322,7 +322,7 @@ io.on('connection', (socket) => {
           
 
         // Retrieve the receiver's socket ID
-        const receiverSocketId = userSocketMap.get(receiverId);
+        var receiverSocketId = userSocketMap.get(receiverId);
 
         if (receiverSocketId) {
           io.to(receiverSocketId).emit('notification', content);
