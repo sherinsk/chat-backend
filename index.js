@@ -448,12 +448,12 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected');
     // Remove the user from the mapping if needed
-    // userSocketMap.forEach((value, key) => {
-    //   if (value === socket.id) {
-          //  console.log("deleted")
-    //     userSocketMap.delete(key);
-    //   }
-    // });
+    userSocketMap.forEach((value, key) => {
+      if (value === socket.id) {
+           console.log("deleted")
+        userSocketMap.delete(key);
+      }
+    });
   });
 });
 
