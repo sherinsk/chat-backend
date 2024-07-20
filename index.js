@@ -335,6 +335,30 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('onlineusers', async ({ token }) => {
+    try {
+      const decoded = parseJwt(token);
+      if (!decoded) {
+        return;
+      }
+      const senderId = decoded.userId;
+
+
+        // Retrieve the receiver's socket ID
+        var receiverSocketId = userSocketMap.get(senderId);
+
+        if (receiverSocketId) {
+          console.log(userSocketMap)
+          io.to(receiverSocketId).emit('onlineusers', userSocketMap);
+        } else {
+          console.log(`No socket ID found for user ${receiverId}`);
+        }
+    
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+
   socket.on('typing', async ({ token, receiverId }) => {
     try {
       const decoded = parseJwt(token);
