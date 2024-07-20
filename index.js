@@ -447,6 +447,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected');
+    console.log(userSocketMap)
     // Remove the user from the mapping if needed
     userSocketMap.forEach((value, key) => {
       if (value === socket.id) {
