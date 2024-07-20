@@ -352,9 +352,12 @@ io.on('connection', (socket) => {
 
         if (receiverSocketId) {
           console.log(userSocketMap)
-          const users=JSON.stringify(userSocketMap)
-          console.log(users)
-          io.to(receiverSocketId).emit('onlineusers',users );
+          const Obj={}
+          for (const key in userSocketMap) {
+            Obj.key=userSocketMap[key]
+          }
+          console.log(Obj)
+          io.to(receiverSocketId).emit('onlineusers',Obj );
         } else {
           console.log(`No socket ID found for user ${receiverId}`);
         }
