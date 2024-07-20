@@ -311,31 +311,25 @@ io.on('connection', (socket) => {
       io.to(room).emit('message', message);
 
       // Check if the receiver is in the same room
-      // const clientsInRoom = await io.in(room).allSockets();
-      // const isReceiverInRoom = Array.from(clientsInRoom).includes(userSocketMap.get(receiverId));
+      const clientsInRoom = await io.in(room).allSockets();
+      const isReceiverInRoom = Array.from(clientsInRoom).includes(userSocketMap.get(receiverId));
 
-      // if (!isReceiverInRoom) {
-      //   // Create and emit notification to the receiver
-      //   const sender = await prisma.user.findUnique({ where: { id: senderId } });
-      //   console.log(sender)
-      //   const notification = await prisma.notification.create({
-      //     data: {
-      //       userId: receiverId,
-      //       messageId: message.id,
-      //       content: `New message from ${sender.username}`,
-      //     },
-      //   });
-      //   console.log(notification);
+      if (!isReceiverInRoom) {
+        // Create and emit notification to the receiver
+        const sender = await prisma.user.findUnique({ where: { id: senderId } });
+        console.log(sender)
+        const content= `New message from ${sender.username}`,
+          
 
-      //   // Retrieve the receiver's socket ID
-      //   const receiverSocketId = userSocketMap.get(receiverId);
+        // Retrieve the receiver's socket ID
+        const receiverSocketId = userSocketMap.get(receiverId);
 
-      //   if (receiverSocketId) {
-      //     io.to(receiverSocketId).emit('notification', notification);
-      //   } else {
-      //     console.log(`No socket ID found for user ${receiverId}`);
-        // }
-      // }
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit('notification', content);
+        } else {
+          console.log(`No socket ID found for user ${receiverId}`);
+        }
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -357,32 +351,6 @@ io.on('connection', (socket) => {
       const room = [senderId, receiverId].sort().join('-');
       io.to(room).emit('typing', obj);
 
-      // Check if the receiver is in the same room
-      // const clientsInRoom = await io.in(room).allSockets();
-      // const isReceiverInRoom = Array.from(clientsInRoom).includes(userSocketMap.get(receiverId));
-
-      // if (!isReceiverInRoom) {
-      //   // Create and emit notification to the receiver
-      //   const sender = await prisma.user.findUnique({ where: { id: senderId } });
-      //   console.log(sender)
-      //   const notification = await prisma.notification.create({
-      //     data: {
-      //       userId: receiverId,
-      //       messageId: message.id,
-      //       content: `New message from ${sender.username}`,
-      //     },
-      //   });
-      //   console.log(notification);
-
-      //   // Retrieve the receiver's socket ID
-      //   const receiverSocketId = userSocketMap.get(receiverId);
-
-      //   if (receiverSocketId) {
-      //     io.to(receiverSocketId).emit('notification', notification);
-      //   } else {
-      //     console.log(`No socket ID found for user ${receiverId}`);
-        // }
-      // }
     } catch (error) {
       console.error('Error sending message:', error);
     }
