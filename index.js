@@ -187,9 +187,46 @@ const authenticateToken = (req, res, next) => {
 
 // Get all users
 app.get('/users', async (req, res) => {
-  const users = await prisma.user.findMany();
-  res.json(users);
+  try {
+    const users = await prisma.user.findMany();
+    let token = req.headers['authorization'];
+    token = token.split(' ')[1];
+    const tokenUserId = (parseJwt(token)).userId;
+
+    for (let i = 0; i < users.length; i++) {
+      const userId = users[i].id;
+      const messages = await prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: parseInt(tokenUserId), receiverId: parseInt(userId) },
+            { senderId: parseInt(userId), receiverId: parseInt(tokenUserId) },
+          ],
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 1,
+      });
+
+      if (messages.length > 0) {
+        const lastMessage = messages[0];
+        users[i].lastMessage = {
+          message: lastMessage.content,
+          timestamp: lastMessage.createdAt,
+          type: lastMessage.senderId === parseInt(tokenUserId) ? 'Sent' : 'Received',
+        };
+      } else {
+        users[i].lastMessage = null;
+      }
+    }
+
+    res.status(200).json(users);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
 
 // Get user by id
 app.get('/users/:id', async (req, res) => {
