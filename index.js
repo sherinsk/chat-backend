@@ -318,7 +318,7 @@ io.on('connection', (socket) => {
         // Create and emit notification to the receiver
         const sender = await prisma.user.findUnique({ where: { id: senderId } });
         console.log(sender)
-        const content= `New message from ${sender.username}`,
+        const content= `New message from ${sender.username}`
           
 
         // Retrieve the receiver's socket ID
