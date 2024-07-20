@@ -337,6 +337,7 @@ io.on('connection', (socket) => {
 
   socket.on('onlineusers', async ({ token }) => {
     try {
+      console.log("hi")
       console.log(token)
       const decoded = parseJwt(token);
       if (!decoded) {
