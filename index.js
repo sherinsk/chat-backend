@@ -355,6 +355,7 @@ io.on('connection', (socket) => {
           const Obj = Object.fromEntries(
             Object.entries(userSocketMap).map(([key, value]) => [Number(key), value])
           );
+          console.log(Obj)
           const users = Object.keys(Obj).map(Number);
           console.log(users)
           io.to(receiverSocketId).emit('onlineusers',users );
