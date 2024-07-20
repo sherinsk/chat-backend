@@ -352,10 +352,7 @@ io.on('connection', (socket) => {
 
         if (receiverSocketId) {
           console.log(userSocketMap)
-          const Obj={}
-          for (const key in userSocketMap) {
-            Obj.key=userSocketMap[key]
-          }
+          const Obj = Object.fromEntries(userSocketMap);
           console.log(Obj)
           io.to(receiverSocketId).emit('onlineusers',Obj );
         } else {
