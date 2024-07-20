@@ -278,11 +278,16 @@ io.on('connection', (socket) => {
 
   // Store the user's socket ID when they connect
   socket.on('register', (token) => {
-    console.log(token)
-    const decoded=parseJwt(token)
-    console.log(decoded)
-    userSocketMap.set(userId, socket.id);
-    console.log(`User ${userId} connected with socket ID ${socket.id}`);
+    console.log(token);
+    const decoded = parseJwt(token);
+
+    if (decoded && decoded.userId) {
+      const userId = decoded.userId;
+      userSocketMap.set(userId, socket.id);
+      console.log(`User ID ${userId} is associated with socket ID ${socket.id}`);
+    } else {
+      console.error('Invalid token: Cannot decode userId');
+    }
   });
 
   socket.on('message', async ({ token, receiverId, content }) => {
