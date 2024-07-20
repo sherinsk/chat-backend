@@ -335,7 +335,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('onlineusers', async ({ token }) => {
+  socket.on('onlineusers', async (token) => {
     try {
       console.log("hi")
       console.log(token)
