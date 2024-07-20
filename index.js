@@ -60,6 +60,7 @@ const parseJwt = (token) => {
 };
 
 2  // Global object to store user ID to socket ID mappings
+const userSocketMap = new Map();
 
 //send otp
 
@@ -276,10 +277,11 @@ io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   // Store the user's socket ID when they connect
-  // socket.on('register', (userId) => {
-  //   userSocketMap.set(userId, socket.id);
-  //   console.log(`User ${userId} connected with socket ID ${socket.id}`);
-  // });
+  socket.on('register', (token) => {
+    const userId=(parseJwt(token)).userId
+    userSocketMap.set(userId, socket.id);
+    console.log(`User ${userId} connected with socket ID ${socket.id}`);
+  });
 
   socket.on('message', async ({ token, receiverId, content }) => {
     try {
@@ -441,6 +443,7 @@ io.on('connection', (socket) => {
     // Remove the user from the mapping if needed
     // userSocketMap.forEach((value, key) => {
     //   if (value === socket.id) {
+          //  console.log("deleted")
     //     userSocketMap.delete(key);
     //   }
     // });
