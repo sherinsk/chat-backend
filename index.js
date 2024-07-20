@@ -353,8 +353,9 @@ io.on('connection', (socket) => {
         if (receiverSocketId) {
           console.log(userSocketMap)
           const Obj = Object.fromEntries(userSocketMap);
-          console.log(Obj)
-          io.to(receiverSocketId).emit('onlineusers',Obj );
+          const users = Array.from(Obj.keys());
+          console.log(users)
+          io.to(receiverSocketId).emit('onlineusers',users );
         } else {
           console.log(`No socket ID found for user ${receiverId}`);
         }
