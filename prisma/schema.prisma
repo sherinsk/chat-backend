@@ -13,6 +13,7 @@ model User {
   password  String
   username  String
   isEmailverified Boolean @default(false)
+  profilePic        String?    @default("https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png")
   messagesSent   Message[] @relation("SentMessages")
   messagesReceived Message[] @relation("ReceivedMessages")
   notifications      Notification[]

@@ -5,10 +5,15 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
+const multer = require('multer');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const nodemailer = require("nodemailer");
 const path = require('path');
 const ejs = require('ejs');
 const { error } = require('console');
+const sharp = require('sharp');
+const { decode } = require('punycode');
 
 
 const prisma = new PrismaClient();
@@ -63,6 +68,94 @@ const parseJwt = (token) => {
 const userSocketMap = new Map();
 
 //send otp
+
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+});
+
+// Set up Multer storage
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    // Allow only JPEG files
+    if (!file.mimetype.includes('jpeg' || 'png' ||'jpg')) {
+      return cb(new Error('Only JPEG and PNG files are allowed'), false);
+    }
+    cb(null, true);
+  }
+});
+
+const compressImage = async (buffer, maxSize) => {
+  let quality = 80;
+  let width = 800;
+  let compressedBuffer = buffer;
+  
+  while (true) {
+    const resizedBuffer = await sharp(compressedBuffer)
+      .resize({ width }) // Resize to maintain aspect ratio
+      .jpeg({ quality }) // Adjust JPEG quality
+      .toBuffer();
+
+    if (resizedBuffer.length <= maxSize || quality <= 10) {
+      return resizedBuffer;
+    }
+    
+    quality -= 10;
+    if (quality < 10) quality = 10; // Minimum quality limit
+  }
+};
+
+// Upload endpoint
+app.post('/upload', upload.single('image'), async (req, res) => {
+  const file = req.file;
+  var token=req.headers['authorization']
+  token=token.split(' ')[1]
+  console.log(token)
+  const decoded=parseJwt(token)
+  console.log(decoded)
+
+  if (!file) {
+    return res.status(400).json({ error: 'No file uploaded or file is too large.' });
+  }
+
+  let compressedImageBuffer = file.buffer;
+
+  // Compress image if file size is greater than 200 KB
+  if (file.size > 200 * 1024) {
+    try {
+      compressedImageBuffer = await compressImage(file.buffer, 200 * 1024);
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      return res.status(500).json({ error: 'Error compressing image' });
+    }
+  }
+
+  const userFolder = `${decoded.userId}/`; // Create a folder named user-{userId}
+  const photo = {
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: `${userFolder}${Date.now().toString()}-${file.originalname}`,
+    Body: compressedImageBuffer,
+    ContentType: 'image/jpeg'
+  };
+
+  photo.path = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${photo.Key}`;
+  
+
+  try {
+    const command = new PutObjectCommand(photo);
+    await s3Client.send(command);
+    const photo_update=await prisma.user.update({where:{id:parseInt(decoded.userId)},data:{profilePic:photo.path}})
+    res.status(200).json({ message: 'File uploaded successfully', imageUrl: photo.path });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ error: 'Error uploading file' });
+  }
+});
 
 app.post('/sendotp',async (req, res)=>{
   const { email,username } = req.body;
