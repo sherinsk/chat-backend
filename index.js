@@ -111,7 +111,7 @@ const compressImage = async (buffer, maxSize) => {
 };
 
 // Upload endpoint
-app.post('/upload', upload.single('image'), async (req, res) => {
+app.patch('/upload', upload.single('image'), async (req, res) => {
   const file = req.file;
   var token=req.headers['authorization']
   token=token.split(' ')[1]
