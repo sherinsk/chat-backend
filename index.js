@@ -57,6 +57,7 @@ app.use(express.json());
 
 const parseJwt = (token) => {
   try {
+    console.log(token)
     return jwt.verify(token, JWT_SECRET);
   } catch (e) {
     console.error('Invalid token', e);
